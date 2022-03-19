@@ -11,6 +11,7 @@ import java.util.List;
 public class Manifold {
     private Block A;
     private Block B;
+    public boolean isCollision = true;
 
     public Manifold(Block A, Block B){
         this.A = A;
@@ -82,6 +83,10 @@ public class Manifold {
             }
         }
 
+        if (normal == null){
+            isCollision = false;
+            return;
+        }
         normal = normal.multiply(-1);
         lhs.physics_model.contacts = contacts;
     }
