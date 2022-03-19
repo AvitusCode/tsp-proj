@@ -131,6 +131,28 @@ class Vec2{
         double y = (a*(-b*x0 + a*y0) - b*c)/(a*a + b*b);
         return new Point2D(x0 - x,y0 - y);
     }
+
+    static Point2D getNormal(int index){
+        if (index == 0){
+            return upNormal;
+        }
+        else if (index == 1){
+            return rightNormal;
+        }
+        else if (index == 2){
+            return downNormal;
+        }
+        else if (index == 3){
+            return leftNormal;
+        }
+
+        return new Point2D(0,0);
+    }
+
+    public static Point2D upNormal = new Point2D(0, -1);
+    public static Point2D rightNormal = new Point2D(1, 0);
+    public static Point2D downNormal = new Point2D(0, 1);
+    public static Point2D leftNormal = new Point2D(-1, 0);
 }
 class Block{
     public final Physics_Model physics_model;
@@ -149,6 +171,7 @@ class Block{
 class Utility_Functions {
     private static final List<Block> blocks = new ArrayList<>();
     private static final long MOD = 100000000000L;
+
 
     /*
      * point of intersect vector's
@@ -196,55 +219,6 @@ class Utility_Functions {
             return null;
         }
         if (y < Math.min(y1_1, y1_2) || y < Math.min(y2_1, y2_2) || y > Math.max(y2_1, y2_2) || y > Math.max(y1_1, y1_2)) {
-            return null;
-        }
-
-        return new Point2D(x, y);
-
-    }
-
-    static Point2D getPoint(Vec2 vec1, Vec2 vec2, Boolean stop1, Boolean stop2) {
-        double x1_1 = vec1.getPoint1().getX();
-        double x1_2 = vec1.getPoint2().getX();
-        double y1_1 = vec1.getPoint1().getY();
-        double y1_2 = vec1.getPoint2().getY();
-
-        double x2_1 = vec2.getPoint1().getX();
-        double x2_2 = vec2.getPoint2().getX();
-        double y2_1 = vec2.getPoint1().getY();
-        double y2_2 = vec2.getPoint2().getY();
-
-        double x, y;
-
-        if (x1_1 == x1_2) {
-            x = x1_1;
-            if (y2_1 == y2_2) {
-                y = y2_1;
-            } else {
-                y = (x - x2_1) / (x2_2 - x2_1) * (y2_2 - y2_1) + y2_1;
-            }
-        } else if (x2_1 == x2_2) {
-            x = x2_1;
-            if (y1_1 == y1_2) {
-                y = y1_1;
-            } else {
-                y = (x - x1_1) / (x1_2 - x1_1) * (y1_2 - y1_1) + y1_1;
-            }
-        } else if (y1_1 == y1_2) {
-            y = y1_1;
-            x = (y - y2_1) / (y2_2 - y2_1) * (x2_2 - x2_1) + x2_1;
-        } else if (y2_1 == y2_2) {
-            y = y2_1;
-            x = (y - y1_1) / (y1_2 - y1_1) * (x1_2 - x1_1) + x1_1;
-        } else {
-            x = (x1_1 / (x1_2 - x1_1) * (y1_2 - y1_1) - x2_1 / (x2_2 - x2_1) * (y2_2 - y2_1) + y2_1 - y1_1) / ((y1_2 - y1_1) / (x1_2 - x1_1) - (y2_2 - y2_1) / (x2_2 - x2_1));
-            y = (x - x1_1) / (x1_2 - x1_1) * (y1_2 - y1_1) + y1_1;
-        }
-
-        if(stop1 && (x < Math.min(x1_1, x1_2) ||  x > Math.max(x1_1, x1_2) || y < Math.min(y1_1, y1_2) || y > Math.max(y1_1, y1_2))){
-            return null;
-        }
-        if(stop2 && (x < Math.min(x2_1, x2_2) || x > Math.max(x2_1, x2_2) || y < Math.min(y2_1, y2_2) ||y > Math.max(y2_1, y2_2) )){
             return null;
         }
 
@@ -317,7 +291,6 @@ class Utility_Functions {
         // верхняя линия
         Points.add(point1);
         Points.add(point2);
-        Vec2 vec2_1 = new Vec2(point1, point2);
 
         // левый нижний угол и правый нижний угол
         point1 = new Point2D(block.getRectangle().getX(), block.getRectangle().getY() + block.getRectangle().getHeight());
@@ -326,10 +299,8 @@ class Utility_Functions {
         point2 = transform.transform(point2);
 
         // верхняя линия
-        Points.add(point1);
         Points.add(point2);
-
-
+        Points.add(point1);
 
         return Points;
     }

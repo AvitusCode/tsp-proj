@@ -2,103 +2,92 @@ package com.example.demo2;
 
 import javafx.geometry.Point2D;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.transform.Transform;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class Manifold {
-    public Block A;
-    public Block B;
+    private Block A;
+    private Block B;
 
     public Manifold(Block A, Block B){
         this.A = A;
         this.B = B;
+
         solveCollision();
     }
 
-    private void solveCollision(){ // Generate contact information
-        contacts = Utility_Functions.intersects(A, B);
-        List<UserPair> PointsMapA = Utility_Functions.getIntersectsPointListOnePoint(contacts,A);
-        List<UserPair> PointsMapB = Utility_Functions.getIntersectsPointListOnePoint(contacts,B);
-        List<Point2D> Points = Utility_Functions.IntersectsPoints(A, B);
+    private void shapeOverlapDIAG(Block lhs, Block rhs){
+        List<Point2D> poly1 = Utility_Functions.getPoints(lhs);
+        List<Point2D> poly2 = Utility_Functions.getPoints(rhs);
+        contacts = new ArrayList<>();
 
-        System.out.println(Points);
-        System.out.println(PointsMapA);
-        System.out.println(PointsMapB);
+        // Нужно проверить обе фигуры
+        for (int shape = 0; shape < 2; shape++) {
 
-        if(PointsMapA != null && PointsMapA.size() != 0 && PointsMapB != null && PointsMapB.size() != 0){
-            // относительно блока А
-            Point2D A = PointsMapA.get(0).getKEY1();
-            Point2D B = PointsMapB.get(0).getKEY1();
-            Point2D C = PointsMapA.get(0).getVALUE1();
-            Point2D K = PointsMapA.get(0).getVALUE2();
-            Vec2 CB = new Vec2(C,B);
-            Vec2 KB = new Vec2(C,B);
-            CB.calculate();
-            KB.calculate();
-            Point2D normal1 = CB.NormalVec(A);
-            Point2D normal2 = CB.NormalVec(K);
-            double depth1 = CB.DistanceVecPoint(A);
-            double depth2 = CB.DistanceVecPoint(K);
-            if(Math.abs(normal1.getY()) < Math.abs(normal2.getY()) ){
-                normal1 = normal2;
-                depth1 = depth2;
+            if (shape == 1) {
+                List<Point2D> temp = poly1;
+                poly1 = poly2;
+                poly2 = temp;
             }
 
-            Point2D normal11 = KB.NormalVec(A);
-            Point2D normal12 = KB.NormalVec(C);
-            double depth11 = KB.DistanceVecPoint(A);
-            double depth12 = KB.DistanceVecPoint(C);
+            for (int p = 0; p < poly1.size(); p++) {
+                Point2D lineR1s = shape == 0 ? Utility_Functions.CenterRectangle(lhs.getRectangle()) : Utility_Functions.CenterRectangle(rhs.getRectangle());
+                Point2D lineR1e = poly1.get(p);
+                Point2D depth = new Point2D(0, 0);
 
-            if(Math.abs(normal11.getY()) < Math.abs(normal12.getY()) ){
-                normal11 = normal12;
-                depth11 = depth12;
-            }
-            Point2D nrml;
-            double depth;
-            if(Math.abs(normal11.getY()) < Math.abs(normal1.getY()) ){
-                nrml = normal11;
-                depth = depth11;
-            }else{
-                nrml = normal1;
-                depth = depth1;
-            }
-            normal = nrml.normalize();
-           // normal = normal.multiply(-1);
-            displacement = depth;
+                for (int q = 0; q < poly2.size(); q++) {
+                    Point2D lineR2s = poly2.get(q);
+                    Point2D lineR2e = poly2.get((q + 1) % poly2.size());
 
-        }else if(PointsMapA != null && PointsMapA.size() == 1) {
-            // относительно первого рассматриваем
-            Point2D B = PointsMapA.get(0).getKEY1();
-            Point2D A = PointsMapA.get(0).getVALUE1();
-            Point2D C = PointsMapA.get(0).getVALUE2();
-            Vec2 AC = new Vec2(A, C);
-            AC.calculate();
-            normal = AC.NormalVec(B).normalize();
-            displacement = AC.DistanceVecPoint(B);
-        }else if(PointsMapB != null && PointsMapB.size() == 1) {
-            // относительно
-            Point2D D = PointsMapB.get(0).getKEY1();
-            Point2D A = PointsMapB.get(0).getVALUE1();
-            Point2D C = PointsMapB.get(0).getVALUE2();
-            Vec2 AC = new Vec2(A,C);
-            AC.calculate();
-            normal = AC.NormalVec(D).normalize();
-            displacement = AC.DistanceVecPoint(D);
-            System.out.println(normal);
-        }else if (Points.size() == 2){
-            Point2D A = Points.get(0);
-            Point2D B = Points.get(1);
-            Vec2 AB = new Vec2(A,B);
-            AB.calculate();
-            Point2D C = contacts.get(0);
-            Point2D D = contacts.get(1);
-            Point2D CD = C.add(D).multiply(0.5);
-            normal = AB.NormalVec(CD).normalize();
-            displacement = AB.DistanceVecPoint(C);
-            normal = normal.multiply(-1.0);
+                    // Standard "off the shelf" line intersection
+                    double h = (lineR2e.getX() - lineR2s.getX()) * (lineR1s.getY() - lineR1e.getY()) -
+                            (lineR1s.getX() - lineR1e.getX()) * (lineR2e.getY() - lineR2s.getY());
+                    double t1 = ((lineR2s.getY() - lineR2e.getY()) * (lineR1s.getX() - lineR2s.getX()) +
+                            (lineR2e.getX() - lineR2s.getX()) * (lineR1s.getY() - lineR2s.getY())) / h;
+                    double t2 = ((lineR1s.getY() - lineR1e.getY()) * (lineR1s.getX() - lineR2s.getX()) +
+                            (lineR1e.getX() - lineR1s.getX()) * (lineR1s.getY() - lineR2s.getY())) / h;
+
+
+                    if (t1 >= 0.0 && t1 < 1.0 && t2 >= 0 && t2 < 1.0) {
+                        depth = new Point2D(
+                                depth.getX() + (1 - t1) * (lineR1e.getX() - lineR1s.getX()),
+                                depth.getY() + (1 - t1) * (lineR1e.getY() - lineR1s.getY()));
+
+                        if (shape == 0){
+                            normal = Vec2.getNormal(q);
+                            Transform transform = B.getRectangle().getLocalToParentTransform();
+                            normal = transform.transform(normal);
+                        }
+                        else{
+                            if (normal != null){
+                                normal = normal.multiply(-1);
+                            }
+                            else{
+                                normal = Vec2.getNormal(q);
+                                Transform transform = A.getRectangle().getLocalToParentTransform();
+                                normal = transform.transform(normal);
+                            }
+                        }
+
+                        contacts.add(lineR1e);
+                    }
+                }
+
+                // re-estimate pos
+                depth  = depth.multiply(shape == 0 ? -1 : 1);
+                lhs.physics_model.setPosition(new Point2D(lhs.getRectangle().getX() + depth.getX(), lhs.getRectangle().getY() + depth.getY()));
+            }
         }
 
-        System.out.println(displacement);
+        normal = normal.multiply(-1);
+        lhs.physics_model.contacts = contacts;
+    }
+
+    private void solveCollision(){ // Generate contact information
+        shapeOverlapDIAG(A, B);
     }
 
     public void applyImpulse(){  // solve impulse

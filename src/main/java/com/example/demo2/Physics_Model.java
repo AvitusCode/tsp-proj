@@ -71,7 +71,7 @@ class Physics_Model {
     * apply the previously calculated momentum to the body
     * */
     public void applyImpulse(final Point2D impulse, final Point2D vec){
-        velocity.add(impulse.multiply(1.0 / mass));
+        velocity = velocity.add(impulse.multiply(1.0 / mass));
         wVelocity += 1.0 / inertia * (vec.getX() * impulse.getY() - vec.getY() * impulse.getX());
     }
     /*
@@ -119,7 +119,6 @@ class Physics_Model {
 
 
             // work with angle // work with angle // work with angle //
-            t = Math.abs(t);
             if (contacts != null) {
                 for (Point2D point2D : contacts) {
                     if (point2D != null) {
@@ -129,7 +128,8 @@ class Physics_Model {
                         wVelocity += a_w * t;// new rotate speed
                     }
                 }
-            } else if (!stop) {
+            }
+            else {
                 rectangle.setRotate(rectangle.getRotate() + wVelocity * t);
             }
 
