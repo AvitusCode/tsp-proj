@@ -1,15 +1,10 @@
-module com.example.superproject {
+module com.example.demo {
     requires javafx.controls;
     requires javafx.fxml;
-    requires javafx.web;
+    requires javafx.graphics;
+    requires lombok;
 
-    requires org.controlsfx.controls;
-    requires com.dlsc.formsfx;
-    requires validatorfx;
-    requires org.kordamp.ikonli.javafx;
-    requires org.kordamp.bootstrapfx.core;
-    requires eu.hansolo.tilesfx;
-
-    opens com.example.superproject to javafx.fxml;
-    exports com.example.superproject;
+    exports Project.modules.Physics;
+    exports Project;
+    opens Project to javafx.fxml;
 }
